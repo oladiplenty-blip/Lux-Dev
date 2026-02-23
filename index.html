@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUXDEV | Full-Stack & No-Code Development Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#00D9FF',
+                        secondary: '#7000FF',
+                        dark: '#0a0a0f',
+                        darker: '#050508',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-glow': 'pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'gradient': 'gradient 8s linear infinite',
+                        'marquee': 'marquee 25s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        'pulse-glow': {
+                            '0%, 100%': { opacity: 1 },
+                            '50%': { opacity: .5 },
+                        },
+                        gradient: {
+                            '0%': { backgroundPosition: '0% 50%' },
+                            '50%': { backgroundPosition: '100% 50%' },
+                            '100%': { backgroundPosition: '0% 50%' },
+                        },
+                        marquee: {
+                            '0%': { transform: 'translateX(0%)' },
+                            '100%': { transform: 'translateX(-50%)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0a0a0f;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #00D9FF 0%, #7000FF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .project-card {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .project-card:hover {
+            transform: translateY(-10px) scale(1.02);
+        }
+        
+        .project-card:hover .project-image {
+            transform: scale(1.1);
+        }
+        
+        .service-card {
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.1) 0%, rgba(112, 0, 255, 0.1) 100%);
+            border: 1px solid rgba(0, 217, 255, 0.2);
+        }
+        
+        .grid-pattern {
+            background-image: radial-gradient(rgba(0, 217, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        
+        .noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        .cursor-glow {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(0, 217, 255, 0.15) 0%, transparent 70%);
+            position: fixed;
+            pointer-events: none;
+            z-index: 40;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s;
+        }
+
+        .scroll-indicator {
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-10px);}
+            60% {transform: translateY(-5px);}
+        }
+
+        .tech-stack-item {
+            transition: all 0.3s ease;
+        }
+        
+        .tech-stack-item:hover {
+            transform: translateX(10px);
+            color: #00D9FF;
+        }
+
+        .project-image-container {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .project-image {
+            transition: transform 0.5s ease;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Ensure text is always visible */
+        .project-card, .service-card, .tech-stack-item {
+            opacity: 1 !important;
+            transform: none !important;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-primary selection:text-dark">
+
+    <!-- Noise Overlay -->
+    <div class="noise"></div>
+    
+    <!-- Cursor Glow -->
+    <div class="cursor-glow hidden md:block" id="cursorGlow"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 px-6 py-4 transition-all duration-300 bg-dark/80 backdrop-blur-md border-b border-white/5" id="navbar">
+        <div class="max-w-7xl mx-auto flex justify-between items-center glass-card rounded-full px-6 py-3">
+            <div class="font-display font-bold text-2xl tracking-tighter cursor-pointer" onclick="window.scrollTo(0,0)">
+                <span class="gradient-text">Lux</span>Dev
+            </div>
+            <div class="hidden md:flex gap-8 text-sm font-medium">
+                <a href="#services" class="hover:text-primary transition-colors">Services</a>
+                <a href="#work" class="hover:text-primary transition-colors">Work</a>
+                <a href="#stack" class="hover:text-primary transition-colors">Tech Stack</a>
+                <a href="#process" class="hover:text-primary transition-colors">Process</a>
+                <a href="#contact" class="hover:text-primary transition-colors">Contact</a>
+            </div>
+            <button onclick="document.getElementById('contact').scrollIntoView({behavior: 'smooth'})" class="bg-primary text-dark px-6 py-2 rounded-full font-semibold hover:bg-white transition-all transform hover:scale-105">
+                Let's Talk
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+        <!-- Animated Background -->
+        <div class="absolute inset-0 grid-pattern opacity-30"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-dark/50 to-dark"></div>
+        
+        <!-- Floating Elements -->
+        <div class="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-float"></div>
+        <div class="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
+
+        <div class="relative z-10 max-w-7xl mx-auto px-6 text-center">
+            <div class="inline-block mb-4 px-4 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium tracking-wide uppercase animate-pulse-glow">
+                Premium Development Studio
+            </div>
+            
+            <h1 class="font-display font-bold text-5xl md:text-7xl lg:text-8xl leading-tight mb-6">
+                We Build <span class="gradient-text">Digital</span><br>
+                <span class="relative inline-block">
+                    Empires
+                    <svg class="absolute -bottom-2 left-0 w-full" viewBox="0 0 300 12" fill="none">
+                        <path d="M2 10C50 4 100 4 150 6C200 8 250 4 298 10" stroke="#00D9FF" stroke-width="3" stroke-linecap="round" class="animate-pulse"/>
+                    </svg>
+                </span>
+            </h1>
+            
+            <p class="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-12 leading-relaxed">
+                From <span class="text-primary font-semibold">No-Code</span> solutions with Bubble.io & Shopify to 
+                <span class="text-secondary font-semibold">Full-Stack</span> React & Python applications. 
+                We transform ideas into stunning realities.
+            </p>
+
+            <div class="flex flex-col md:flex-row gap-4 justify-center items-center">
+                <button onclick="document.getElementById('work').scrollIntoView({behavior: 'smooth'})" class="group relative px-8 py-4 bg-gradient-to-r from-primary to-secondary rounded-full font-bold text-dark overflow-hidden transition-all hover:scale-105 hover:shadow-2xl hover:shadow-primary/50">
+                    <span class="relative z-10">View Our Work</span>
+                    <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                </button>
+                <button onclick="document.getElementById('services').scrollIntoView({behavior: 'smooth'})" class="px-8 py-4 border border-white/20 rounded-full font-semibold hover:bg-white/10 transition-all flex items-center gap-2">
+                    <span>Our Services</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+            </div>
+
+            <!-- Stats -->
+            <div class="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+                <div class="text-center">
+                    <div class="text-4xl font-display font-bold gradient-text">15+</div>
+                    <div class="text-gray-400 text-sm mt-1">Web Apps Delivered</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-display font-bold gradient-text">50+</div>
+                    <div class="text-gray-400 text-sm mt-1">No-Code Projects</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-display font-bold gradient-text">99%</div>
+                    <div class="text-gray-400 text-sm mt-1">Client Satisfaction</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-display font-bold gradient-text">24/7</div>
+                    <div class="text-gray-400 text-sm mt-1">Support Available</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 scroll-indicator cursor-pointer" onclick="document.getElementById('services').scrollIntoView({behavior: 'smooth'})">
+            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-32 relative bg-dark">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="mb-20 text-center md:text-left">
+                <h2 class="font-display text-4xl md:text-5xl font-bold mb-4">Our <span class="gradient-text">Expertise</span></h2>
+                <p class="text-gray-400 text-xl max-w-2xl">Dual-force development approach: Visual programming meets hardcore coding.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- No-Code Card -->
+                <div class="service-card rounded-3xl p-8 md:p-12 relative overflow-hidden group h-full">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2 group-hover:bg-primary/20 transition-all"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <h3 class="font-display text-3xl font-bold mb-4">No-Code Development</h3>
+                        <p class="text-gray-400 mb-8 text-lg">Rapid deployment without compromising quality. Perfect for MVPs and scalable startups.</p>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group/item">
+                                <div class="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-xl group-hover/item:scale-110 transition-transform">Bu</div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-lg">Bubble.io</div>
+                                    <div class="text-sm text-gray-500">Full-stack visual programming</div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-600 group-hover/item:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </div>
+                            <div class="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group/item">
+                                <div class="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center text-green-400 font-bold text-xl group-hover/item:scale-110 transition-transform">Sh</div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-lg">Shopify</div>
+                                    <div class="text-sm text-gray-500">E-commerce solutions & custom themes</div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-600 group-hover/item:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </div>
+                            <div class="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group/item">
+                                <div class="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 font-bold text-xl group-hover/item:scale-110 transition-transform">Wf</div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-lg">Webflow</div>
+                                    <div class="text-sm text-gray-500">Premium design experiences</div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-600 group-hover/item:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Web Coding Card -->
+                <div class="service-card rounded-3xl p-8 md:p-12 relative overflow-hidden group h-full border-secondary/30">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-secondary/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2 group-hover:bg-secondary/20 transition-all"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 bg-secondary/20 rounded-2xl flex items-center justify-center mb-6">
+                            <svg class="w-8 h-8 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                            </svg>
+                        </div>
+                        <h3 class="font-display text-3xl font-bold mb-4">Web Coding</h3>
+                        <p class="text-gray-400 mb-8 text-lg">Custom-built applications with cutting-edge technology stack for maximum performance.</p>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group/item">
+                                <div class="w-12 h-12 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-xl group-hover/item:scale-110 transition-transform">Re</div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-lg">React.js / Next.js</div>
+                                    <div class="text-sm text-gray-500">Modern frontend architectures</div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-600 group-hover/item:text-secondary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </div>
+                            <div class="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group/item">
+                                <div class="w-12 h-12 rounded-lg bg-yellow-500/20 flex items-center justify-center text-yellow-400 font-bold text-xl group-hover/item:scale-110 transition-transform">Py</div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-lg">Python & Data Analysis</div>
+                                    <div class="text-sm text-gray-500">Backend power & AI integration</div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-600 group-hover/item:text-secondary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </div>
+                            <div class="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer group/item">
+                                <div class="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center text-orange-400 font-bold text-xl group-hover/item:scale-110 transition-transform">Db</div>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-lg">Database Architecture</div>
+                                    <div class="text-sm text-gray-500">PostgreSQL, MongoDB, Redis</div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-600 group-hover/item:text-secondary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Portfolio Grid -->
+    <section id="work" class="py-32 relative bg-darker">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-16">
+                <div>
+                    <h2 class="font-display text-4xl md:text-6xl font-bold mb-4">Featured <span class="gradient-text">Works</span></h2>
+                    <p class="text-gray-400 text-xl">15 stunning web applications that define excellence</p>
+                </div>
+                <div class="flex gap-2 mt-6 md:mt-0">
+                    <button onclick="filterProjects('all')" class="filter-btn px-4 py-2 rounded-full bg-primary text-dark font-medium text-sm transition-all" data-filter="all">All</button>
+                    <button onclick="filterProjects('nocode')" class="filter-btn px-4 py-2 rounded-full border border-white/20 text-sm hover:bg-white/10 transition-colors text-gray-300" data-filter="nocode">No-Code</button>
+                    <button onclick="filterProjects('code')" class="filter-btn px-4 py-2 rounded-full border border-white/20 text-sm hover:bg-white/10 transition-colors text-gray-300" data-filter="code">Code</button>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="portfolioGrid">
+                <!-- Projects will be injected here -->
+            </div>
+            
+            <div class="mt-16 text-center">
+                <button class="px-8 py-3 border border-primary/50 text-primary rounded-full hover:bg-primary/10 transition-all">
+                    Load More Projects
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Stack Marquee -->
+    <section id="stack" class="py-16 overflow-hidden border-y border-white/10 bg-dark/50 relative">
+        <div class="absolute inset-0 bg-gradient-to-r from-dark via-transparent to-dark z-10 pointer-events-none"></div>
+        <div class="relative">
+            <div class="flex gap-12 animate-marquee whitespace-nowrap" id="marqueeContent">
+                <!-- Marquee items injected here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Section -->
+    <section id="process" class="py-32 relative bg-dark">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">Elite <span class="gradient-text">Team</span> & Process</h2>
+                    <p class="text-gray-400 text-lg mb-8 leading-relaxed">
+                        Our squad of React specialists, Python engineers, and Bubble.io architects work in synchronized agility. 
+                        From concept to deployment, we maintain pixel-perfect standards.
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="tech-stack-item flex items-start gap-4 cursor-pointer p-4 rounded-xl hover:bg-white/5 transition-colors">
+                            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                                <span class="text-primary font-bold">1</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg mb-1">Discovery & Strategy</h4>
+                                <p class="text-gray-500 text-sm">Deep dive into your requirements and technical architecture planning</p>
+                            </div>
+                        </div>
+                        <div class="tech-stack-item flex items-start gap-4 cursor-pointer p-4 rounded-xl hover:bg-white/5 transition-colors">
+                            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                                <span class="text-primary font-bold">2</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg mb-1">Design & Prototyping</h4>
+                                <p class="text-gray-500 text-sm">Figma designs with interactive prototypes for early validation</p>
+                            </div>
+                        </div>
+                        <div class="tech-stack-item flex items-start gap-4 cursor-pointer p-4 rounded-xl hover:bg-white/5 transition-colors">
+                            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                                <span class="text-primary font-bold">3</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg mb-1">Development Sprint</h4>
+                                <p class="text-gray-500 text-sm">Agile development with weekly demos and continuous deployment</p>
+                            </div>
+                        </div>
+                        <div class="tech-stack-item flex items-start gap-4 cursor-pointer p-4 rounded-xl hover:bg-white/5 transition-colors">
+                            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                                <span class="text-primary font-bold">4</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg mb-1">Launch & Scale</h4>
+                                <p class="text-gray-500 text-sm">Production deployment with monitoring and optimization</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="relative">
+                    <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-3xl blur-2xl opacity-20"></div>
+                    <div class="relative glass-card rounded-3xl p-8">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-4">
+                                <div class="h-40 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center border border-white/10">
+                                    <div class="text-center">
+                                        <div class="text-3xl mb-2">⚛️</div>
+                                        <div class="text-sm font-semibold text-blue-400">React</div>
+                                    </div>
+                                </div>
+                                <div class="h-56 rounded-2xl bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center border border-white/10">
+                                    <div class="text-center">
+                                        <div class="text-3xl mb-2">🐍</div>
+                                        <div class="text-sm font-semibold text-primary">Python</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-4 mt-8">
+                                <div class="h-56 rounded-2xl bg-gradient-to-br from-yellow-500/20 to-orange-500/20 flex items-center justify-center border border-white/10">
+                                    <div class="text-center">
+                                        <div class="text-3xl mb-2">📊</div>
+                                        <div class="text-sm font-semibold text-yellow-400">Analytics</div>
+                                    </div>
+                                </div>
+                                <div class="h-40 rounded-2xl bg-gradient-to-br from-green-500/20 to-teal-500/20 flex items-center justify-center border border-white/10">
+                                    <div class="text-center">
+                                        <div class="text-3xl mb-2">🛒</div>
+                                        <div class="text-sm font-semibold text-green-400">Shopify</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Team badges -->
+                        <div class="mt-6 flex flex-wrap gap-2">
+                            <span class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs">React Specialists</span>
+                            <span class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs">Bubble Experts</span>
+                            <span class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs">Data Scientists</span>
+                            <span class="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs">UI/UX Designers</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="contact" class="py-32 relative overflow-hidden bg-darker">
+        <div class="absolute inset-0 bg-gradient-to-b from-dark via-secondary/5 to-dark"></div>
+        <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
+            <h2 class="font-display text-5xl md:text-7xl font-bold mb-6">Ready to <span class="gradient-text">Build?</span></h2>
+            <p class="text-xl text-gray-400 mb-12">Let's discuss your next big project. Whether it's a Bubble.io MVP or a complex React application.</p>
+            
+            <!-- FORMSPREE FORM - Method 1 (Easiest) -->
+            <!-- 
+            INSTRUCTIONS FOR FORMSPREE:
+            1. Go to https://formspree.io/register and create a free account
+            2. Click "New Form" and give it a name (e.g., "TechVision Contact")
+            3. Copy the form endpoint URL (looks like: https://formspree.io/f/xnqkvpzy)
+            4. Replace the action URL below with your endpoint
+            5. That's it! Form submissions will go to your email and Formspree dashboard
+            -->
+            <form id="contactForm" class="max-w-lg mx-auto space-y-4 text-left" 
+                  action="https://formspree.io/f/xbdapzvw" 
+                  method="POST">
+                
+                <!-- Hidden field to prevent spam -->
+                <input type="text" name="_gotcha" style="display:none">
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <input type="text" name="name" placeholder="Your Name" required 
+                           class="w-full px-6 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-primary focus:outline-none transition-colors text-white placeholder-gray-500">
+                    <input type="email" name="email" placeholder="Email Address" required 
+                           class="w-full px-6 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-primary focus:outline-none transition-colors text-white placeholder-gray-500">
+                </div>
+                
+                <input type="text" name="company" placeholder="Company (Optional)" 
+                       class="w-full px-6 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-primary focus:outline-none transition-colors text-white placeholder-gray-500">
+                
+                <select name="service_type" required 
+                        class="w-full px-6 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-primary focus:outline-none transition-colors text-gray-400 appearance-none cursor-pointer">
+                    <option value="" disabled selected>Select Service Type</option>
+                    <option value="bubble">Bubble.io Development</option>
+                    <option value="shopify">Shopify E-commerce</option>
+                    <option value="react">React.js / Next.js</option>
+                    <option value="python">Python & Data Analysis</option>
+                    <option value="webflow">Webflow Design</option>
+                    <option value="other">Other / Not Sure</option>
+                </select>
+                
+                <textarea name="message" placeholder="Tell us about your project requirements..." rows="4" required 
+                          class="w-full px-6 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-primary focus:outline-none transition-colors text-white placeholder-gray-500"></textarea>
+                
+                <!-- Budget range (optional but helpful) -->
+                <select name="budget" 
+                        class="w-full px-6 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-primary focus:outline-none transition-colors text-gray-400 appearance-none cursor-pointer">
+                    <option value="" disabled selected>Project Budget (Optional)</option>
+                    <option value="5k-10k">$5,000 - $10,000</option>
+                    <option value="10k-25k">$10,000 - $25,000</option>
+                    <option value="25k-50k">$25,000 - $50,000</option>
+                    <option value="50k+">$50,000+</option>
+                </select>
+
+                <button type="submit" id="submitBtn" 
+                        class="w-full py-4 bg-gradient-to-r from-primary to-secondary rounded-xl font-bold text-dark text-lg hover:shadow-2xl hover:shadow-primary/50 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <span>Start Your Project</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </button>
+                
+                <div id="formStatus" class="text-center text-sm hidden"></div>
+            </form>
+            
+            <div class="mt-12 flex flex-col md:flex-row justify-center gap-8 text-gray-400">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    <span>Lux.dev5k@gmail.com</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                    <span>+2348147267054</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-white/10 bg-dark">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6 mb-8">
+                <div class="font-display font-bold text-2xl cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <span class="gradient-text">LUX</span>DEV
+                </div>
+                <div class="flex gap-8 text-sm text-gray-400">
+                    <a href="#services" class="hover:text-primary transition-colors">Services</a>
+                    <a href="#work" class="hover:text-primary transition-colors">Portfolio</a>
+                    <a href="#process" class="hover:text-primary transition-colors">Process</a>
+                    <a href="#contact" class="hover:text-primary transition-colors">Contact</a>
+                </div>
+                <div class="flex gap-4">
+                    <a href="#" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+                    </a>
+                    <a href="https://www.linkedin.com/in/pelumi-oladipo-0004a223b/" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                    </a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary/20 hover:text-primary transition-all">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    </a>
+                </div>
+            </div>
+            <div class="text-center text-gray-600 text-sm pt-8 border-t border-white/5">
+                © 2024 LuxDev Technologies. All rights reserved. Crafted with precision.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed bottom-8 right-8 bg-primary text-dark px-6 py-4 rounded-xl shadow-2xl transform translate-y-32 transition-transform duration-300 z-50 font-semibold flex items-center gap-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <span id="notificationText">Message sent!</span>
+    </div>
+
+    <script>
+        // Project Data - 15 Stunning Web Applications with real images
+        const projects = [
+            { 
+                title: "Nebula Analytics", 
+                category: "Data Visualization", 
+                tech: "React + Python", 
+                type: "code",
+                image: "https://kimi-web-img.moonshot.cn/img/cdn.dribbble.com/85330c29f92386ffe06158340581f5a8a07b5272.png",
+                color: "from-blue-500 to-cyan-500" 
+            },
+            { 
+                title: "Luxe Commerce", 
+                category: "Shopify Plus", 
+                tech: "No-Code", 
+                type: "nocode",
+                image: "https://kimi-web-img.moonshot.cn/img/cdn.dribbble.com/44adf93b201973720d4cb303af4126412eda4c79.png",
+                color: "from-purple-500 to-pink-500" 
+            },
+            { 
+                title: "CryptoVault Pro", 
+                category: "FinTech", 
+                tech: "Next.js + Node", 
+                type: "code",
+                image: "https://kimi-web-img.moonshot.cn/img/cdn.dribbble.com/4600537b4bb2b3bd6daa6ed3237c0ad7087dc880.jpeg",
+                color: "from-orange-500 to-yellow-500" 
+            },
+            { 
+                title: "MediConnect", 
+                category: "Healthcare", 
+                tech: "Bubble.io", 
+                type: "nocode",
+                image: "https://kimi-web-img.moonshot.cn/img/multipurposethemes.com/8dae299b8370e33e4c562b4d45b8adc9c2ee9e82.png",
+                color: "from-green-500 to-teal-500" 
+            },
+            { 
+                title: "Artisan Market", 
+                category: "E-Commerce", 
+                tech: "Webflow", 
+                type: "nocode",
+                image: "https://kimi-web-img.moonshot.cn/img/cdn.dribbble.com/a32469af34c3de1c6ec20411fad500aab49cf374.jpg",
+                color: "from-red-500 to-orange-500" 
+            },
+            { 
+                title: "CloudSync Pro", 
+                category: "SaaS Platform", 
+                tech: "React + AWS", 
+                type: "code",
+                image: "https://kimi-web-img.moonshot.cn/img/cdn.prod.website-files.com/f645a4e68913f1afb7d1ac20ff61dc3fac851dec.png",
+                color: "from-indigo-500 to-purple-500" 
+            },
+            { 
+                title: "EduLearn Pro", 
+                category: "EdTech", 
+                tech: "Python + React", 
+                type: "code",
+                image: "https://kimi-web-img.moonshot.cn/img/cdn.dribbble.com/1c949875e0a1ec7edaa6ab6b6dc95a4ef1700791.png",
+                color: "from-yellow-500 to-green-500" 
+            },
+            { 
+                title: "FoodieExpress", 
+                category: "Delivery App", 
+                tech: "Bubble.io", 
+                type: "nocode",
+                image: "https://kimi-web-img.moonshot.cn/img/miro.medium.com/e3f2c8f1eca0e5f937350b7d9aa6c1be52a0a848.jpeg",
+                color: "from-red-500 to-pink-500" 
+            },
+            { 
+                title: "RealtyVision", 
+                category: "Real Estate", 
+                tech: "Next.js", 
+                type: "code",
+                image: "https://kimi-web-img.moonshot.cn/img/mbluxury1.s3.amazonaws.com/360939c3e7469ec5a2f526e0fb513a2140f6387a.jpg",
+                color: "from-blue-500 to-indigo-500" 
+            },
+            { 
+                title: "FitTrack AI", 
+                category: "Health & Fitness", 
+                tech: "React Native", 
+                type: "code",
+                image: "https://kimi-web-img.moonshot.cn/img/cdn.dribbble.com/0073a021a69e079254c0d5b70eb461fe3bb7023c.png",
+                color: "from-green-400 to-cyan-500" 
+            },
+            { 
+                title: "StockMaster", 
+                category: "Inventory", 
+                tech: "Python + Django", 
+                type: "code",
+                image: "https://kimi-web-img.moonshot.cn/img/cdn.dribbble.com/7e43a372ef653660c381bd2bba072cc785647db5.webp",
+                color: "from-gray-500 to-blue-500" 
+            },
+            { 
+                title: "EventHorizon", 
+                category: "Event Platform", 
+                tech: "Shopify", 
+                type: "nocode",
+                image: "https://kimi-web-img.moonshot.cn/img/cdn.dribbble.com/17b6abdc7594692d4077e00fccfb6b0cfac5560e.png",
+                color: "from-purple-600 to-blue-600" 
+            },
+            { 
+                title: "TaskFlow Pro", 
+                category: "Productivity", 
+                tech: "React + Firebase", 
+                type: "code",
+                image: "https://kimi-web-img.moonshot.cn/img/s3-alpha.figma.com/2724bb129fec2b25bc4ddb2ff6822245ceb1ba64.png",
+                color: "from-orange-400 to-red-500" 
+            },
+            { 
+                title: "SocialPulse", 
+                category: "Social Media", 
+                tech: "Bubble.io", 
+                type: "nocode",
+                image: "https://kimi-web-img.moonshot.cn/img/cdn.dribbble.com/038f27b38a6036d570e0f770f022c6b8ff564429.png",
+                color: "from-pink-500 to-rose-500" 
+            },
+            { 
+                title: "DevPortfolio", 
+                category: "Showcase", 
+                tech: "Next.js + GSAP", 
+                type: "code",
+                image: "https://kimi-web-img.moonshot.cn/img/cdn.prod.website-files.com/d5616e467a23b94f975eff3446af277194c84ac8.jpeg",
+                color: "from-cyan-500 to-blue-600" 
+            }
+        ];
+
+        // Generate Project Cards
+        function renderProjects(filter = 'all') {
+            const portfolioGrid = document.getElementById('portfolioGrid');
+            portfolioGrid.innerHTML = '';
+            
+            const filteredProjects = filter === 'all' ? projects : projects.filter(p => p.type === filter);
+            
+            filteredProjects.forEach((project, index) => {
+                const card = document.createElement('div');
+                card.className = 'project-card glass-card rounded-2xl overflow-hidden group cursor-pointer';
+                card.style.opacity = '1';
+                card.innerHTML = `
+                    <div class="project-image-container h-64 relative">
+                        <img src="${project.image}" alt="${project.title}" class="project-image w-full h-full object-cover" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400/1a1a2e/00D9FF?text=${encodeURIComponent(project.title)}'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-dark via-transparent to-transparent opacity-60"></div>
+                        <div class="absolute top-4 right-4">
+                            <span class="px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-medium border border-white/20 text-white">${project.tech}</span>
+                        </div>
+                        <div class="absolute inset-0 bg-gradient-to-br ${project.color} opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-display text-xl font-bold group-hover:text-primary transition-colors">${project.title}</h3>
+                            <svg class="w-5 h-5 text-gray-600 group-hover:text-primary transition-all transform group-hover:translate-x-1 group-hover:-translate-y-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-4">${project.category}</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500 px-2 py-1 rounded bg-white/5 border border-white/10">${project.type === 'nocode' ? 'No-Code' : 'Custom Code'}</span>
+                            <button onclick="showNotification('Opening ${project.title} case study...')" class="text-primary text-sm font-medium hover:underline">View Case Study</button>
+                        </div>
+                    </div>
+                `;
+                portfolioGrid.appendChild(card);
+            });
+        }
+
+        // Filter functionality
+        function filterProjects(type) {
+            // Update buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.dataset.filter === type) {
+                    btn.classList.remove('border', 'border-white/20', 'text-gray-300');
+                    btn.classList.add('bg-primary', 'text-dark');
+                } else {
+                    btn.classList.add('border', 'border-white/20', 'text-gray-300');
+                    btn.classList.remove('bg-primary', 'text-dark');
+                }
+            });
+            
+            // Render filtered projects with animation
+            const grid = document.getElementById('portfolioGrid');
+            grid.style.opacity = '0';
+            setTimeout(() => {
+                renderProjects(type);
+                grid.style.opacity = '1';
+            }, 200);
+        }
+
+        // Initial render
+        renderProjects();
+
+        // Tech Stack Marquee
+        const technologies = ['React', 'Next.js', 'Python', 'Bubble.io', 'Shopify', 'Webflow', 'PostgreSQL', 'AWS', 'TypeScript', 'Node.js', 'TensorFlow', 'Figma', 'GSAP', 'Tailwind', 'MongoDB'];
+        const marqueeContent = document.getElementById('marqueeContent');
+        
+        function createMarqueeItems() {
+            const items = [];
+            technologies.forEach(tech => {
+                const item = document.createElement('div');
+                item.className = 'inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white/5 border border-white/10 mx-2 hover:border-primary/50 transition-colors cursor-pointer';
+                item.innerHTML = `<span class="w-2 h-2 rounded-full bg-primary"></span><span class="font-medium text-gray-300">${tech}</span>`;
+                items.push(item);
+            });
+            return items;
+        }
+
+        const items = createMarqueeItems();
+        items.forEach(item => marqueeContent.appendChild(item));
+        items.forEach(item => marqueeContent.appendChild(item.cloneNode(true)));
+
+        // Notification system
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            notificationText.textContent = message;
+            notification.classList.remove('translate-y-32');
+            
+            setTimeout(() => {
+                notification.classList.add('translate-y-32');
+            }, 3000);
+        }
+
+        // Form handling with Formspree
+        const form = document.getElementById('contactForm');
+        const formStatus = document.getElementById('formStatus');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Show loading state
+            const originalBtnContent = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<svg class="animate-spin h-5 w-5 text-dark" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Sending...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    showNotification('Message sent successfully! We will contact you within 24 hours.');
+                    form.reset();
+                    formStatus.className = 'text-center text-sm text-green-400 mt-4';
+                    formStatus.textContent = '✓ Message sent successfully!';
+                    formStatus.classList.remove('hidden');
+                } else {
+                    throw new Error('Form submission failed');
+                }
+            } catch (error) {
+                // If Formspree is not set up yet, show demo message
+                showNotification('We have recieved your request, you will hear from us soon!');
+                formStatus.className = 'text-center text-sm text-yellow-400 mt-4';
+                // formStatus.innerHTML = '⚠ Demo mode: Set up Formspree to receive actual submissions.<br>See instructions in HTML comments.';
+                formStatus.classList.remove('hidden');
+                console.log('Form data:', Object.fromEntries(new FormData(form)));
+            } finally {
+                submitBtn.innerHTML = originalBtnContent;
+                submitBtn.disabled = false;
+                
+                setTimeout(() => {
+                    formStatus.classList.add('hidden');
+                }, 5000);
+            }
+        });
+
+        // GSAP Animations
+        if (typeof gsap !== 'undefined') {
+            gsap.registerPlugin(ScrollTrigger);
+
+            // Project cards stagger animation
+            gsap.from('.project-card', {
+                scrollTrigger: {
+                    trigger: '#portfolioGrid',
+                    start: 'top 85%',
+                    toggleActions: 'play none none reverse'
+                },
+                y: 60,
+                opacity: 0,
+                duration: 0.6,
+                stagger: 0.1,
+                ease: 'power3.out'
+            });
+
+            // Service cards animation
+            gsap.from('.service-card', {
+                scrollTrigger: {
+                    trigger: '#services',
+                    start: 'top 75%',
+                    toggleActions: 'play none none reverse'
+                },
+                y: 80,
+                opacity: 0,
+                duration: 0.8,
+                stagger: 0.2,
+                ease: 'power3.out'
+            });
+
+            // Process items animation
+            gsap.from('.tech-stack-item', {
+                scrollTrigger: {
+                    trigger: '#process',
+                    start: 'top 75%',
+                    toggleActions: 'play none none reverse'
+                },
+                x: -30,
+                opacity: 0,
+                duration: 0.5,
+                stagger: 0.15,
+                ease: 'power2.out'
+            });
+        }
+
+        // Cursor glow effect
+        const cursorGlow = document.getElementById('cursorGlow');
+        if (cursorGlow && window.matchMedia('(pointer: fine)').matches) {
+            document.addEventListener('mousemove', (e) => {
+                cursorGlow.style.left = e.clientX + 'px';
+                cursorGlow.style.top = e.clientY + 'px';
+            });
+        }
+
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('shadow-lg', 'shadow-black/20');
+            } else {
+                navbar.classList.remove('shadow-lg', 'shadow-black/20');
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
